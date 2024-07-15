@@ -1,38 +1,50 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
 {% block title %}
-<title>Create Issue</title>
+<title>Создание новой задачи</title>
 {% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-center align-items-center min-vh-100">
-    <div class="card" style="width: 24rem;">
+    <div class="card" style="width: 30rem;">
         <div class="card-body">
-            <h5 class="card-title">Create Issue</h5>
-            <form method="post" action="{% url 'issue_create' %}">
+            <h5 class="card-title">Создание новой задачи</h5>
+            {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+            <form method="post">
                 {% csrf_token %}
                 <div class="mb-3">
-                    {{ form.summary.label_tag }}
-                    {{ form.summary }}
+                    <label for="summary" class="form-label">Заголовок</label>
+                    <input type="text" class="form-control" id="summary" name="summary" required>
                 </div>
                 <div class="mb-3">
-                    {{ form.description.label_tag }}
-                    {{ form.description }}
+                    <label for="description" class="form-label">Описание</label>
+                    <textarea class="form-control" id="description" name="description"></textarea>
                 </div>
                 <div class="mb-3">
-                    {{ form.types.label_tag }}
-                    {{ form.types }}
+                    <label for="status" class="form-label">Статус</label>
+                    <select class="form-control" id="status" name="status" required>
+                        {% for status in statuses %}
+                            <option value="{{ status.id }}">{{ status.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <div class="mb-3">
-                    {{ form.status.label_tag }}
-                    {{ form.status }}
+                    <label for="type" class="form-label">Тип задачи</label>
+                    <select class="form-control" id="type" name="type" multiple required>
+                        {% for type in types %}
+                            <option value="{{ type.id }}">{{ type.title }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <div class="d-flex justify-content-between">
-                    <button type="submit" class="btn btn-success">Create</button>
-                    <a href="{% url 'index' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-success">Создать</button>
+                    <a href="{% url 'index' %}" class="btn btn-secondary">Отмена</a>
                 </div>
             </form>
         </div>
     </div>
 </div>
 {% endblock %}
+
