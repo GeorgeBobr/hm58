@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    <title>Трекер задач</title>
+{% endblock %}
+
+{% block content %}
+    <h1 style="color: #999; text-align: center">Трекер задач</h1>
+    <div class="d-grid gap-2">
+        <a href="{% url 'issue_create' %}" class="btn btn-primary">Создать задачу</a>
+    </div>
+    <div class="container mt-4">
+        <div class="row">
+            {% for issue in issues %}
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title" style="text-align: center">{{ issue.summary }}</h5>
+                            <p class="card-text" style="text-align: center">{{ issue.description }}</p>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{% url 'issue_detail' issue.pk %}" class="btn btn-primary">Подробнее</a>
+                                <a href="{% url 'issue_delete' issue.pk %}" class="btn btn-danger">Удалить</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
