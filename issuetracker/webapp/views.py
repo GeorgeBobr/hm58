@@ -3,7 +3,7 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from webapp.forms import IssueForm
-from webapp.models import Issue
+from webapp.models import Issue, Status, Type
 
 
 class IssueListView(TemplateView):
@@ -17,52 +17,79 @@ class IssueListView(TemplateView):
 
 class IssueCreateView(View):
     def get(self, request, *args, **kwargs):
-        form = IssueForm()
-        print(form)
-        return render(request, "issue_create.html", {"form": form})
+        statuses = Status.objects.all()
+        types = Type.objects.all()
+        context = {
+            'statuses': statuses,
+            'types': types
+        }
+        return render(request, "issue_create.html", context)
 
     def post(self, request, *args, **kwargs):
-        form = IssueForm(data=request.POST)
-        if form.is_valid():
-            types = form.cleaned_data.get("type")
+        summary = request.POST.get('summary')
+        description = request.POST.get('description')
+        status_id = request.POST.get('status')
+        type_ids = request.POST.getlist('type')
 
+        if summary and status_id and type_ids:
+            status = get_object_or_404(Status, id=status_id)
             issue = Issue.objects.create(
-                summary=form.cleaned_data.get("summary"),
-                description=form.cleaned_data.get("description"),
-                status=form.cleaned_data.get("status")
+                summary=summary,
+                description=description,
+                status=status
             )
-            if types:
-                issue.type.set(types)
-
-            return redirect("index")
+            issue.types.set(Type.objects.filter(id__in=type_ids))
+            return redirect('index')
         else:
-            print(form.errors)
-            return render(request, "issue_create.html", {"form": form})
+            statuses = Status.objects.all()
+            types = Type.objects.all()
+            context = {
+                'statuses': statuses,
+                'types': types,
+                'error': 'Заполните все обязательные поля'
+            }
+            return render(request, "issue_create.html", context)
 
 
-def IssueUpdateView(request, id):
-    issue = get_object_or_404(Issue, id=id)
-    if request.method == "GET":
-        form = IssueForm(initial={
-            "summary": issue.summary,
-            "description": issue.description,
-            "types": issue.types.all(),
-            "status": issue.status
-        })
-        return render(request, "issue_edit.html", {"form": form})
-    else:
-        form = IssueForm(data=request.POST)
-        if form.is_valid():
-            types = form.cleaned_data.get("types")
-            status = form.cleaned_data.get("status")
-            issue.summary = form.cleaned_data.get("summary")
-            issue.description = form.cleaned_data.get("description")
-            issue.types.set(types)
+
+class IssueUpdateView(View):
+    def get(self, request, id, *args, **kwargs):
+        issue = get_object_or_404(Issue, id=id)
+        statuses = Status.objects.all()
+        types = Type.objects.all()
+        context = {
+            'issue': issue,
+            'statuses': statuses,
+            'types': types
+        }
+        return render(request, "issue_edit.html", context)
+
+    def post(self, request, id, *args, **kwargs):
+        issue = get_object_or_404(Issue, id=id)
+        summary = request.POST.get('summary')
+        description = request.POST.get('description')
+        status_id = request.POST.get('status')
+        type_ids = request.POST.getlist('type')
+
+        if summary and status_id and type_ids:
+            status = Status.objects.get(id=status_id)
+            issue.summary = summary
+            issue.description = description
             issue.status = status
+            issue.types.clear()  # Очищаем текущие типы задачи
+            issue.types.add(*Type.objects.filter(id__in=type_ids))  # Добавляем новые типы
             issue.save()
-            return redirect("index")
+            return redirect('index')
         else:
-            return render(request, "issue_edit.html", {"form": form})
+            statuses = Status.objects.all()
+            types = Type.objects.all()
+            context = {
+                'issue': issue,
+                'statuses': statuses,
+                'types': types,
+                'error': 'Заполните все обязательные поля'
+            }
+            return render(request, "issue_edit.html", context)
 
 
 
